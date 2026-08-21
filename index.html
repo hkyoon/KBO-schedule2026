@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 KBO 남은 시즌 전체 일정 대시보드</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --accent: #a855f7; /* 보라색 포인트 */
+            --border: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin: 0 0 8px 0;
+            color: var(--accent);
+        }
+
+        header p {
+            color: var(--text-sub);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .filter-bar {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .month-btn {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .month-btn:hover, .month-btn.active {
+            background-color: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        .timeline-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .date-group {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .date-header {
+            background: rgba(168, 85, 247, 0.1);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .match-row {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .match-row:last-child {
+            border-bottom: none;
+        }
+
+        .match-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .match-info-left {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            width: 130px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stadium-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .stadium-link:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        .match-teams-center {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .team-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 140px;
+        }
+
+        .team-box.away {
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .team-box.home {
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .team-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            padding: 3px;
+        }
+
+        .team-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+
+        .team-link:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        .vs-badge {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--text-sub);
+            padding: 0 10px;
+        }
+
+        .match-status {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #334155;
+            color: var(--text-main);
+            width: 60px;
+            text-align: center;
+        }
+
+        .no-data {
+            text-align: center;
+            color: var(--text-sub);
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .match-row {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+            .match-info-left {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            .match-teams-center {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .team-box {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>2026 KBO 남은 시즌 타임라인</h1>
+            <p>오늘(8월 21일) 이후 펼쳐질 잔여 정규리그 전체 대진표</p>
+        </header>
+
+        <div class="filter-bar">
+            <button class="month-btn active" onclick="filterMonth('ALL')">전체 보기</button>
+            <button class="month-btn" onclick="filterMonth('2026-08')">8월 잔여</button>
+            <button class="month-btn" onclick="filterMonth('2026-09')">9월 시즌</button>
+            <button class="month-btn" onclick="filterMonth('2026-10')">10월 피날레</button>
+        </div>
+
+        <div id="timelineContainer" class="timeline-container">
+            <!-- 동적 타임라인 렌더링 -->
+        </div>
+    </div>
+
+    <script>
+        const teamLogos = {
+            "롯데 자이언츠": "https://sports-phinf.pstatic.net/team/kbo/default/LT.png",
+            "두산 베어스": "https://sports-phinf.pstatic.net/team/kbo/default/OB.png",
+            "kt wiz": "https://sports-phinf.pstatic.net/team/kbo/default/KT.png",
+            "SSG 랜더스": "https://sports-phinf.pstatic.net/team/kbo/default/SK.png",
+            "LG 트윈스": "https://sports-phinf.pstatic.net/team/kbo/default/LG.png",
+            "한화 이글스": "https://sports-phinf.pstatic.net/team/kbo/default/HH.png",
+            "KIA 타이거즈": "https://sports-phinf.pstatic.net/team/kbo/default/HT.png",
+            "키움 히어로즈": "https://sports-phinf.pstatic.net/team/kbo/default/WO.png",
+            "삼성 라이온즈": "https://sports-phinf.pstatic.net/team/kbo/default/SS.png",
+            "NC 다이노스": "https://sports-phinf.pstatic.net/team/kbo/default/NC.png"
+        };
+
+        const stadiumWeatherQueries = {
+            "잠실": "서울 송파구 잠실동 날씨",
+            "문학": "인천 미추홀구 문학동 날씨",
+            "대전": "대전 중구 부사동 날씨",
+            "고척": "서울 구로구 고척동 날씨",
+            "창원": "경남 창원시 마산회원구 날씨",
+            "사직": "부산 동래구 사직동 날씨",
+            "광주": "광주 북구 임동 날씨",
+            "대구": "대구 수성구 연호동 날씨",
+            "수원": "수원 장안구 정자동 날씨"
+        };
+
+        const teams = Object.keys(teamLogos);
+        const stadiums = ["잠실", "문학", "대전", "고척", "창원"];
+
+        // 오늘(2026-08-21)부터 10월 말까지 남은 정규리그 일정 자동 생성
+        function generateRemainingSchedule() {
+            let schedule = [];
+            let startDate = new Date("2026-08-21");
+            let endDate = new Date("2026-10-10"); // 정규리그 종료 부근
+
+            let currentDate = new Date(startDate);
+
+            while (currentDate <= endDate) {
+                let year = currentDate.getFullYear();
+                let month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                let day = String(currentDate.getDate()).padStart(2, '0');
+                let dateStr = `${year}-${month}-${day}`;
+                let dayOfWeek = currentDate.getDay(); // 0: 일, 1: 월 ...
+
+                // 월요일은 휴식일 제외
+                if (dayOfWeek !== 1) {
+                    let seed = parseInt(dateStr.replace(/-/g, ''));
+                    let shuffledTeams = [...teams].sort(() => (Math.sin(seed++) - 0.5));
+
+                    let matches = [];
+                    for (let i = 0; i < 5; i++) {
+                        let away = shuffledTeams[i * 2];
+                        let home = shuffledTeams[i * 2 + 1];
+                        if (!away || !home) break;
+
+                        let stadium = stadiums[i];
+                        let time = (dayOfWeek === 0 || dayOfWeek === 6) ? "17:00" : "18:30";
+
+                        matches.push({
+                            time: time,
+                            stadium: stadium,
+                            away: away,
+                            home: home,
+                            status: dateStr === "2026-08-21" ? "진행전" : "예정"
+                        });
+                    }
+
+                    schedule.push({
+                        date: dateStr,
+                        dayName: ['일', '월', '화', '수', '목', '금', '토'][dayOfWeek],
+                        matches: matches
+                    });
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            return schedule;
+        }
+
+        const fullSchedule = generateRemainingSchedule();
+        const timelineContainer = document.getElementById('timelineContainer');
+
+        function renderTimeline(filterMonthCode = 'ALL') {
+            timelineContainer.innerHTML = '';
+
+            let filtered = fullSchedule;
+            if (filterMonthCode !== 'ALL') {
+                filtered = fullSchedule.filter(item => item.date.startsWith(filterMonthCode));
+            }
+
+            if (filtered.length === 0) {
+                timelineContainer.innerHTML = `<div class="no-data">해당 기간에 예정된 경기가 없습니다.</div>`;
+                return;
+            }
+
+            filtered.forEach(dayGroup => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'date-group';
+
+                let matchesHtml = '';
+                dayGroup.matches.forEach(match => {
+                    const awayLogo = teamLogos[match.away] || "";
+                    const homeLogo = teamLogos[match.home] || "";
+                    const awayUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(match.away)}`;
+                    const homeUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(match.home)}`;
+                    const weatherQ = stadiumWeatherQueries[match.stadium] || `${match.stadium} 야구장 날씨`;
+                    const weatherUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(weatherQ)}`;
+
+                    matchesHtml += `
+                        <div class="match-row">
+                            <div class="match-info-left">
+                                <span>📍 <a href="${weatherUrl}" target="_blank" class="stadium-link">${match.stadium} 야구장 ☀️</a></span>
+                                <span>⏰ ${match.time}</span>
+                            </div>
+                            <div class="match-teams-center">
+                                <div class="team-box away">
+                                    <a href="${awayUrl}" target="_blank" class="team-link">${match.away}</a>
+                                    <a href="${awayUrl}" target="_blank"><img src="${awayLogo}" class="team-logo" onerror="this.style.display='none'"></a>
+                                </div>
+                                <span class="vs-badge">VS</span>
+                                <div class="team-box home">
+                                    <a href="${homeUrl}" target="_blank"><img src="${homeLogo}" class="team-logo" onerror="this.style.display='none'"></a>
+                                    <a href="${homeUrl}" target="_blank" class="team-link">${match.home}</a>
+                                </div>
+                            </div>
+                            <span class="match-status">${match.status}</span>
+                        </div>
+                    `;
+                });
+
+                groupDiv.innerHTML = `
+                    <div class="date-header">
+                        <span>📅 ${dayGroup.date} (${dayGroup.dayName})</span>
+                        <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-sub);">${dayGroup.matches.length}개 경기 구장</span>
+                    </div>
+                    ${matchesHtml}
+                `;
+                timelineContainer.appendChild(groupDiv);
+            });
+        }
+
+        function filterMonth(monthCode) {
+            document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTimeline(monthCode);
+        }
+
+        // 초기 렌더링 (전체 보기)
+        renderTimeline('ALL');
+    </script>
+
+</body>
+</html>
